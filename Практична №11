@@ -1,0 +1,32 @@
+def main():
+    file_name = "text.txt"
+
+    while True:
+        print("\nОберіть опцію:")
+        print("1. Записати до файлу")
+        print("2. Прочитати увесь вміст файлу")
+        print("3. Вийти з редактора")
+
+        choice = input("Ваш вибір: ")
+
+        if choice == "1":
+            text = input("Введіть текст для запису у файл: ")
+            with open(file_name, "a", encoding="utf-8") as file:
+                file.write(text + "\n")
+            print("Текст записано.")
+        elif choice == "2":
+            try:
+                with open(file_name, "r", encoding="utf-8") as file:
+                    content = file.read()
+                print("\nВміст файлу:\n")
+                print(content)
+            except FileNotFoundError:
+                print("Файл ще не створено.")
+        elif choice == "3":
+            print("Вихід з редактора.")
+            break
+        else:
+            print("Невірна опція. Спробуйте ще раз.")
+
+if __name__ == "__main__":
+    main()
