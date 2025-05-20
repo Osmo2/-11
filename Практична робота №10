@@ -1,0 +1,55 @@
+users = {}  # словник для зберігання користувачів у форматі {id: (username, password)}
+next_id = 1
+
+def register_user():
+    global next_id
+    username = input("Введіть ім’я користувача: ")
+    password = input("Введіть пароль: ")
+    users[next_id] = (username, password)
+    print(f"Користувача зареєстровано з ID: {next_id}")
+    next_id += 1
+
+def delete_user():
+    try:
+        user_id = int(input("Введіть ID користувача для видалення: "))
+        if user_id in users:
+            del users[user_id]
+            print("Користувача видалено.")
+        else:
+            print("Користувача з таким ID не знайдено.")
+    except ValueError:
+        print("Некоректний формат ID.")
+
+def user_action():
+    username = input("Введіть ім’я користувача: ")
+    password = input("Введіть пароль: ")
+    for uid, (uname, pwd) in users.items():
+        if uname == username and pwd == password:
+            print(f"Вхід успішний. Виконується дія для користувача ID {uid}...")
+            return
+    print("Невірні дані для входу.")
+
+def main():
+    while True:
+        print("\nОберіть дію:")
+        print("1. Реєстрація нового користувача")
+        print("2. Видалення користувача за ідентифікатором")
+        print("3. Виконання дії від користувача")
+        print("4. Вихід")
+
+        choice = input("Ваш вибір: ")
+
+        if choice == "1":
+            register_user()
+        elif choice == "2":
+            delete_user()
+        elif choice == "3":
+            user_action()
+        elif choice == "4":
+            print("Завершення роботи.")
+            break
+        else:
+            print("Невірний вибір. Спробуйте ще раз.")
+
+if __name__ == "__main__":
+    main()
