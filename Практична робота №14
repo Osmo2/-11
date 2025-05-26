@@ -1,0 +1,59 @@
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Scanner;
+
+public class DiaryApp {
+    public static void main(String[] args) throws IOException {
+        Scanner scanner = new Scanner(System.in);
+        String[] entries = new String[1000];
+        int count = 0;
+
+        System.out.println("Відновити існуючий щоденник? (так/ні)");
+        String answer = scanner.nextLine();
+
+        if (answer.equalsIgnoreCase("так")) {
+            System.out.println("Введіть шлях до файлу:");
+            String path = scanner.nextLine();
+            BufferedReader reader = new BufferedReader(new FileReader(path));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+                entries[count++] = line;
+            }
+            reader.close();
+            System.out.println("Щоденник відновлено. Продовжіть запис...");
+        }
+
+        System.out.println("Введіть бажаний формат дати (наприклад, yyyy-MM-dd HH:mm):");
+        String dateFormat = scanner.nextLine();
+        SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+
+        while (true) {
+            System.out.println("Введіть новий запис (або 'вихід' для завершення):");
+            String input = scanner.nextLine();
+            if (input.equalsIgnoreCase("вихід")) break;
+
+            String timestamp = sdf.format(new Date());
+            entries[count++] = timestamp + " - " + input;
+        }
+
+        System.out.println("Зберегти щоденник? (так/ні)");
+        answer = scanner.nextLine();
+
+        if (answer.equalsIgnoreCase("так")) {
+            System.out.println("Введіть шлях для збереження:");
+            String savePath = scanner.nextLine();
+            BufferedWriter writer = new BufferedWriter(new FileWriter(savePath));
+            for (int i = 0; i < count; i++) {
+                writer.write(entries[i]);
+                writer.newLine();
+                writer.newLine(); // порожній рядок між записами
+            }
+            writer.close();
+            System.out.println("Щоденник збережено.");
+        } else {
+            System.out.println("Щоденник не збережено.");
+        }
+    }
+}
