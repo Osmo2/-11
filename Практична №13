@@ -1,0 +1,132 @@
+import java.io.*;
+import java.util.*;
+
+public class TextEditor {
+
+    private static final String FILE_NAME = "text.txt";
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        boolean працює = true;
+
+        while (працює) {
+            System.out.println("\n=== МЕНЮ ===");
+            System.out.println("1. Показати весь файл з номерами рядків");
+            System.out.println("2. Додати кілька рядків у кінець файлу");
+            System.out.println("3. Показати рядки з обраного діапазону");
+            System.out.println("4. Вставити рядок у вибрану позицію");
+            System.out.println("0. Вихід");
+            System.out.print("Оберіть опцію: ");
+            String опція = scanner.nextLine();
+
+            switch (опція) {
+                case "1" -> показатиФайл();
+                case "2" -> додатиКількаРядків(scanner);
+                case "3" -> показатиДіапазон(scanner);
+                case "4" -> вставитиУПозицію(scanner);
+                case "0" -> {
+                    System.out.println("Завершення програми.");
+                    працює = false;
+                }
+                default -> System.out.println("Невірна опція. Спробуйте ще раз.");
+            }
+        }
+    }
+
+    // 1. Показати весь файл з номерами рядків
+    private static void показатиФайл() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME))) {
+            String рядок;
+            int номер = 1;
+            while ((рядок = reader.readLine()) != null) {
+                System.out.printf("%d: %s%n", номер++, рядок);
+            }
+        } catch (IOException e) {
+            System.out.println("Помилка при читанні файлу: " + e.getMessage());
+        }
+    }
+
+    // 2. Додати кілька рядків у кінець файлу
+    private static void додатиКількаРядків(Scanner scanner) {
+        System.out.println("Введіть рядки для додавання (порожній рядок — завершення):");
+        List<String> новіРядки = new ArrayList<>();
+        while (true) {
+            String введення = scanner.nextLine();
+            if (введення.isEmpty()) break;
+            новіРядки.add(введення);
+        }
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME, true))) {
+            for (String рядок : новіРядки) {
+                writer.write(рядок);
+                writer.newLine();
+            }
+            System.out.println("Рядки успішно додано.");
+        } catch (IOException e) {
+            System.out.println("Помилка при записі у файл: " + e.getMessage());
+        }
+    }
+
+    // 3. Показати рядки в межах діапазону
+    private static void показатиДіапазон(Scanner scanner) {
+        try {
+            System.out.print("Введіть номер початкового рядка: ");
+            int від = Integer.parseInt(scanner.nextLine());
+            System.out.print("Введіть номер кінцевого рядка: ");
+            int до = Integer.parseInt(scanner.nextLine());
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME))) {
+                String рядок;
+                int номер = 1;
+                while ((рядок = reader.readLine()) != null) {
+                    if (номер >= від && номер <= до) {
+                        System.out.printf("%d: %s%n", номер, рядок);
+                    }
+                    номер++;
+                }
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Введіть коректні числові значення.");
+        } catch (IOException e) {
+            System.out.println("Помилка при читанні файлу: " + e.getMessage());
+        }
+    }
+
+    // 4. Вставити рядок у вибрану позицію
+    private static void вставитиУПозицію(Scanner scanner) {
+        try {
+            System.out.print("В яку позицію вставити рядок (номер рядка)? ");
+            int позиція = Integer.parseInt(scanner.nextLine());
+
+            System.out.println("Введіть текст рядка для вставки:");
+            String новийРядок = scanner.nextLine();
+
+            List<String> всіРядки = new ArrayList<>();
+            try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME))) {
+                String рядок;
+                while ((рядок = reader.readLine()) != null) {
+                    всіРядки.add(рядок);
+                }
+            }
+
+            if (позиція < 1 || позиція > всіРядки.size() + 1) {
+                System.out.println("Некоректна позиція.");
+                return;
+            }
+
+            всіРядки.add(позиція - 1, новийРядок);  // вставка
+            всіРядки.addAll(позиція, всіРядки.subList(позиція, всіРядки.size()));  // автоматично зсуває
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
+                for (String рядок : всіРядки) {
+                    writer.write(рядок);
+                    writer.newLine();
+                }
+            }
+            System.out.println("Рядок вставлено у файл.");
+        } catch (NumberFormatException e) {
+            System.out.println("Введіть число для позиції.");
+        } catch (IOException e) {
+            System.out.println("Помилка обробки файлу: " + e.getMessage());
+        }
+    }
+}
