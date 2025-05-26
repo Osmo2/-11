@@ -1,0 +1,127 @@
+import java.io.*;
+import java.util.*;
+
+public class TextEditor {
+
+    private static final String FILE_NAME = "text.txt";
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        boolean running = true;
+
+        while (running) {
+            System.out.println("\nМеню:");
+            System.out.println("1. Показати вміст файлу з номерами рядків");
+            System.out.println("2. Додати кілька рядків до кінця");
+            System.out.println("3. Показати рядки з діапазону");
+            System.out.println("4. Додати рядок у вибрану позицію");
+            System.out.println("0. Вийти");
+            System.out.print("Виберіть опцію: ");
+            int option = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (option) {
+                case 1 -> showFile();
+                case 2 -> addMultipleLines(scanner);
+                case 3 -> showRange(scanner);
+                case 4 -> insertAtPosition(scanner);
+                case 0 -> running = false;
+                default -> System.out.println("Невірна опція!");
+            }
+        }
+    }
+
+    // 1. Показати файл з номерами рядків
+    private static void showFile() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME))) {
+            String line;
+            int lineNum = 1;
+            while ((line = reader.readLine()) != null) {
+                System.out.printf("%d: %s%n", lineNum++, line);
+            }
+        } catch (IOException e) {
+            System.out.println("Помилка читання файлу.");
+        }
+    }
+
+    // 2. Додати кілька рядків до кінця
+    private static void addMultipleLines(Scanner scanner) {
+        System.out.println("Введіть рядки (порожній рядок = завершення):");
+        List<String> lines = new ArrayList<>();
+        while (true) {
+            String input = scanner.nextLine();
+            if (input.isEmpty()) break;
+            lines.add(input);
+        }
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME, true))) {
+            for (String line : lines) {
+                writer.write(line);
+                writer.newLine();
+            }
+            System.out.println("Рядки додано.");
+        } catch (IOException e) {
+            System.out.println("Помилка запису у файл.");
+        }
+    }
+
+    // 3. Вивести діапазон рядків
+    private static void showRange(Scanner scanner) {
+        System.out.print("З якого рядка: ");
+        int from = scanner.nextInt();
+        System.out.print("До якого рядка: ");
+        int to = scanner.nextInt();
+        scanner.nextLine();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME))) {
+            String line;
+            int lineNum = 1;
+            while ((line = reader.readLine()) != null) {
+                if (lineNum >= from && lineNum <= to) {
+                    System.out.printf("%d: %s%n", lineNum, line);
+                }
+                lineNum++;
+            }
+        } catch (IOException e) {
+            System.out.println("Помилка читання файлу.");
+        }
+    }
+
+    // 4. Вставити в обраний рядок
+    private static void insertAtPosition(Scanner scanner) {
+        System.out.print("У який рядок вставити новий текст? ");
+        int position = scanner.nextInt();
+        scanner.nextLine();
+        System.out.println("Введіть текст:");
+        String newText = scanner.nextLine();
+
+        List<String> lines = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+        } catch (IOException e) {
+            System.out.println("Помилка читання файлу.");
+            return;
+        }
+
+        if (position < 1 || position > lines.size() + 1) {
+            System.out.println("Неправильна позиція.");
+            return;
+        }
+
+        lines.add(position - 1, newText);  // вставка в задану позицію
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
+            for (String line : lines) {
+                writer.write(line);
+                writer.newLine();
+            }
+            System.out.println("Рядок вставлено.");
+        } catch (IOException e) {
+            System.out.println("Помилка запису у файл.");
+        }
+    }
+}
