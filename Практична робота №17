@@ -1,0 +1,93 @@
+package tictactoe;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Scanner;
+
+public class Game {
+    public static GameStats play(GameConfig config, GameBoard gameBoard) {
+        Scanner scanner = new Scanner(System.in);
+        char current = 'X';
+        String name = config.player1;
+        int moves = 0;
+        int size = config.size;
+
+        while (true) {
+            printBoard(gameBoard.board);
+            System.out.println(name + " (" + current + "), введіть координати:");
+            int r = scanner.nextInt() - 1;
+            int c = scanner.nextInt() - 1;
+            scanner.nextLine();
+
+            if (r < 0 || r >= size || c < 0 || c >= size || gameBoard.board[r][c] != ' ') {
+                System.out.println("Недопустимий хід.");
+                continue;
+            }
+
+            gameBoard.board[r][c] = current;
+            moves++;
+
+            if (checkWin(gameBoard.board, current)) {
+                printBoard(gameBoard.board);
+                System.out.println("Переможець: " + name);
+                String loser = current == 'X' ? config.player2 : config.player1;
+                String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+                return new GameStats(name, loser, current, date, size);
+            }
+
+            if (moves == size * size) {
+                printBoard(gameBoard.board);
+                System.out.println("Нічия!");
+                String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+                return new GameStats("Нічия", "-", '-', date, size);
+            }
+
+            if (current == 'X') {
+                current = 'O';
+                name = config.player2;
+            } else {
+                current = 'X';
+                name = config.player1;
+            }
+        }
+    }
+
+    private static void printBoard(char[][] board) {
+        int size = board.length;
+        System.out.println();
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                System.out.print(" " + board[i][j]);
+                if (j < size - 1) System.out.print(" |");
+            }
+            System.out.println();
+            if (i < size - 1) {
+                for (int j = 0; j < size; j++) {
+                    System.out.print("---");
+                    if (j < size - 1) System.out.print("+");
+                }
+                System.out.println();
+            }
+        }
+    }
+
+    private static boolean checkWin(char[][] board, char s) {
+        int size = board.length;
+        for (int i = 0; i < size; i++) {
+            boolean row = true, col = true;
+            for (int j = 0; j < size; j++) {
+                if (board[i][j] != s) row = false;
+                if (board[j][i] != s) col = false;
+            }
+            if (row || col) return true;
+        }
+
+        boolean diag1 = true, diag2 = true;
+        for (int i = 0; i < size; i++) {
+            if (board[i][i] != s) diag1 = false;
+            if (board[i][size - i - 1] != s) diag2 = false;
+        }
+
+        return diag1 || diag2;
+    }
+}
