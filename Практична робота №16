@@ -1,0 +1,222 @@
+Main java
+package tictactoe;
+
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        ConfigManager.loadConfig();
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("\n=== МЕНЮ ===");
+            System.out.println("1. Нова гра");
+            System.out.println("2. Налаштування");
+            System.out.println("3. Переглянути статистику");
+            System.out.println("4. Вийти");
+            System.out.print("Оберіть пункт: ");
+            String choice = scanner.nextLine();
+
+            if (choice.equals("1")) {
+                Game.start();
+            } else if (choice.equals("2")) {
+                ConfigManager.configure();
+            } else if (choice.equals("3")) {
+                StatsManager.showStats();
+            } else if (choice.equals("4")) {
+                System.out.println("До побачення!");
+                break;
+            } else {
+                System.out.println("Невірний вибір!");
+            }
+        }
+        scanner.close();
+    }
+}
+ ConfigManager.java 
+package tictactoe;
+
+import java.io.*;
+import java.util.Scanner;
+
+public class ConfigManager {
+    public static int size = 3;
+    public static String player1 = "Гравець 1";
+    public static String player2 = "Гравець 2";
+
+    public static void loadConfig() {
+        File file = new File("config.txt");
+        if (!file.exists()) return;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("size=")) size = Integer.parseInt(line.substring(5));
+                else if (line.startsWith("player1=")) player1 = line.substring(8);
+                else if (line.startsWith("player2=")) player2 = line.substring(8);
+            }
+        } catch (IOException e) {
+            System.out.println("Помилка зчитування конфігурації.");
+        }
+    }
+
+    public static void configure() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Ім’я першого гравця: ");
+        player1 = scanner.nextLine();
+        System.out.print("Ім’я другого гравця: ");
+        player2 = scanner.nextLine();
+        System.out.print("Розмір поля (3-5): ");
+        try {
+            int input = Integer.parseInt(scanner.nextLine());
+            if (input >= 3 && input <= 5) size = input;
+        } catch (Exception e) {
+            System.out.println("Некоректне значення.");
+        }
+        saveConfig();
+    }
+
+    public static void saveConfig() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("config.txt"))) {
+            writer.write("size=" + size); writer.newLine();
+            writer.write("player1=" + player1); writer.newLine();
+            writer.write("player2=" + player2); writer.newLine();
+        } catch (IOException e) {
+            System.out.println("Помилка збереження конфігурації.");
+        }
+    }
+}
+StatsManager.java
+package tictactoe;
+
+import java.io.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+public class StatsManager {
+    public static void saveStats(String winner, char symbol) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("stats.txt", true))) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+            String date = LocalDateTime.now().format(formatter);
+            String loser = winner.equals(ConfigManager.player1) ? ConfigManager.player2 : ConfigManager.player1;
+            if (winner.equals("Нічия")) loser = "-";
+            writer.write("Переможець: " + winner + " | Програв: " + loser +
+                         " | Символ: " + symbol + " | Дата: " + date +
+                         " | Розмір поля: " + ConfigManager.size);
+            writer.newLine();
+        } catch (IOException e) {
+            System.out.println("Помилка збереження статистики.");
+        }
+    }
+
+    public static void showStats() {
+        File file = new File("stats.txt");
+        if (!file.exists()) {
+            System.out.println("Статистика порожня.");
+            return;
+        }
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            System.out.println("\n=== СТАТИСТИКА ІГОР ===");
+            String line;
+            while ((line = reader.readLine()) != null)
+                System.out.println(line);
+        } catch (IOException e) {
+            System.out.println("Помилка читання статистики.");
+        }
+    }
+}
+ Game.java
+package tictactoe;
+
+import java.util.Scanner;
+
+public class Game {
+    private static char[][] board;
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void start() {
+        int size = ConfigManager.size;
+        board = new char[size][size];
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++)
+                board[i][j] = ' ';
+
+        char current = 'X';
+        String name = ConfigManager.player1;
+        int moves = 0;
+
+        while (true) {
+            printBoard();
+            System.out.println(name + " (" + current + "), введіть координати (рядок і стовпець):");
+            int r = scanner.nextInt() - 1;
+            int c = scanner.nextInt() - 1;
+            scanner.nextLine();
+
+            if (r < 0 || r >= size || c < 0 || c >= size || board[r][c] != ' ') {
+                System.out.println("Недопустимий хід.");
+                continue;
+            }
+
+            board[r][c] = current;
+            moves++;
+
+            if (checkWin(current)) {
+                printBoard();
+                System.out.println("Переможець: " + name + " (" + current + ")");
+                StatsManager.saveStats(name, current);
+                break;
+            } else if (moves == size * size) {
+                printBoard();
+                System.out.println("Нічия!");
+                StatsManager.saveStats("Нічия", '-');
+                break;
+            }
+
+            if (current == 'X') {
+                current = 'O';
+                name = ConfigManager.player2;
+            } else {
+                current = 'X';
+                name = ConfigManager.player1;
+            }
+        }
+    }
+
+    private static void printBoard() {
+        System.out.println();
+        for (int i = 0; i < ConfigManager.size; i++) {
+            for (int j = 0; j < ConfigManager.size; j++) {
+                System.out.print(" " + board[i][j]);
+                if (j < ConfigManager.size - 1) System.out.print(" |");
+            }
+            System.out.println();
+            if (i < ConfigManager.size - 1) {
+                for (int j = 0; j < ConfigManager.size; j++) {
+                    System.out.print("---");
+                    if (j < ConfigManager.size - 1) System.out.print("+");
+                }
+                System.out.println();
+            }
+        }
+    }
+
+    private static boolean checkWin(char s) {
+        int size = ConfigManager.size;
+        for (int i = 0; i < size; i++) {
+            boolean row = true, col = true;
+            for (int j = 0; j < size; j++) {
+                if (board[i][j] != s) row = false;
+                if (board[j][i] != s) col = false;
+            }
+            if (row || col) return true;
+        }
+        boolean diag1 = true, diag2 = true;
+        for (int i = 0; i < size; i++) {
+            if (board[i][i] != s) diag1 = false;
+            if (board[i][size - 1 - i] != s) diag2 = false;
+        }
+        return diag1 || diag2;
+    }
+}
+ Щоб запустити: 
+javac tictactoe/*.java
+java tictactoe.Main
