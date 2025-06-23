@@ -1,0 +1,204 @@
+import java.io.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Scanner;
+
+public class TicTacToe {
+    static int size = 3;
+    static String player1 = "Гравець 1";
+    static String player2 = "Гравець 2";
+    static char[][] board;
+    static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        loadConfig();
+        while (true) {
+            System.out.println("\n=== МЕНЮ ===");
+            System.out.println("1. Нова гра");
+            System.out.println("2. Налаштування");
+            System.out.println("3. Переглянути статистику");
+            System.out.println("4. Вийти");
+            System.out.print("Оберіть пункт: ");
+            String choice = scanner.nextLine();
+
+            if (choice.equals("1")) {
+                startGame();
+            } else if (choice.equals("2")) {
+                settingsMenu();
+            } else if (choice.equals("3")) {
+                showStats();
+            } else if (choice.equals("4")) {
+                System.out.println("До побачення!");
+                break;
+            } else {
+                System.out.println("Невірний вибір!");
+            }
+        }
+    }
+
+    static void loadConfig() {
+        File configFile = new File("config.txt");
+        if (!configFile.exists()) return;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(configFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("size=")) size = Integer.parseInt(line.substring(5));
+                else if (line.startsWith("player1=")) player1 = line.substring(8);
+                else if (line.startsWith("player2=")) player2 = line.substring(8);
+            }
+        } catch (IOException e) {
+            System.out.println("Помилка зчитування конфігурації.");
+        }
+    }
+
+    static void saveConfig() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("config.txt"))) {
+            writer.write("size=" + size); writer.newLine();
+            writer.write("player1=" + player1); writer.newLine();
+            writer.write("player2=" + player2); writer.newLine();
+        } catch (IOException e) {
+            System.out.println("Помилка збереження конфігурації.");
+        }
+    }
+
+    static void settingsMenu() {
+        System.out.println("\n=== НАЛАШТУВАННЯ ===");
+        System.out.print("Введіть ім'я першого гравця: ");
+        player1 = scanner.nextLine();
+        System.out.print("Введіть ім'я другого гравця: ");
+        player2 = scanner.nextLine();
+        System.out.print("Введіть розмір поля (3-5): ");
+        try {
+            int inputSize = Integer.parseInt(scanner.nextLine());
+            if (inputSize >= 3 && inputSize <= 5) size = inputSize;
+            else System.out.println("Недопустимий розмір. Використовується попередній.");
+        } catch (Exception e) {
+            System.out.println("Некоректне значення. Використовується попередній.");
+        }
+        saveConfig();
+    }
+
+    static void startGame() {
+        board = new char[size][size];
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++)
+                board[i][j] = ' ';
+
+        char currentPlayer = 'X';
+        String currentName = player1;
+        int totalMoves = 0;
+
+        while (true) {
+            printBoard();
+            System.out.println(currentName + " (" + currentPlayer + "), введіть координати (рядок і стовпець):");
+            int row = scanner.nextInt() - 1;
+            int col = scanner.nextInt() - 1;
+            scanner.nextLine(); // очистка
+
+            if (row < 0 || row >= size || col < 0 || col >= size || board[row][col] != ' ') {
+                System.out.println("Недопустимий хід. Спробуйте ще.");
+                continue;
+            }
+
+            board[row][col] = currentPlayer;
+            totalMoves++;
+
+            if (checkWin(currentPlayer)) {
+                printBoard();
+                System.out.println("Переможець: " + currentName + " (" + currentPlayer + ")");
+                saveStats(currentName, currentPlayer);
+                break;
+            } else if (totalMoves == size * size) {
+                printBoard();
+                System.out.println("Нічия!");
+                saveStats("Нічия", '-');
+                break;
+            }
+
+            // Зміна гравця
+            if (currentPlayer == 'X') {
+                currentPlayer = 'O';
+                currentName = player2;
+            } else {
+                currentPlayer = 'X';
+                currentName = player1;
+            }
+        }
+    }
+
+    static void printBoard() {
+        System.out.println();
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                System.out.print(" " + board[i][j]);
+                if (j < size - 1) System.out.print(" |");
+            }
+            System.out.println();
+            if (i < size - 1) {
+                for (int j = 0; j < size; j++) {
+                    System.out.print("---");
+                    if (j < size - 1) System.out.print("+");
+                }
+                System.out.println();
+            }
+        }
+    }
+
+    static boolean checkWin(char symbol) {
+        // Перевірка рядків
+        for (int i = 0; i < size; i++) {
+            boolean win = true;
+            for (int j = 0; j < size; j++)
+                if (board[i][j] != symbol) win = false;
+            if (win) return true;
+        }
+        // Перевірка стовпців
+        for (int j = 0; j < size; j++) {
+            boolean win = true;
+            for (int i = 0; i < size; i++)
+                if (board[i][j] != symbol) win = false;
+            if (win) return true;
+        }
+        // Діагоналі
+        boolean winMain = true;
+        boolean winAnti = true;
+        for (int i = 0; i < size; i++) {
+            if (board[i][i] != symbol) winMain = false;
+            if (board[i][size - 1 - i] != symbol) winAnti = false;
+        }
+        return winMain || winAnti;
+    }
+
+    static void saveStats(String winner, char symbol) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("stats.txt", true))) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+            String dateTime = LocalDateTime.now().format(formatter);
+            String loser = (winner.equals(player1)) ? player2 : player1;
+            if (winner.equals("Нічия")) loser = "-";
+            writer.write("Переможець: " + winner + " | Програв: " + loser +
+                    " | Символ: " + symbol + " | Дата: " + dateTime +
+                    " | Розмір поля: " + size);
+            writer.newLine();
+        } catch (IOException e) {
+            System.out.println("Помилка збереження статистики.");
+        }
+    }
+
+    static void showStats() {
+        File file = new File("stats.txt");
+        if (!file.exists()) {
+            System.out.println("Статистика порожня.");
+            return;
+        }
+
+        System.out.println("\n=== СТАТИСТИКА ІГОР ===");
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null)
+                System.out.println(line);
+        } catch (IOException e) {
+            System.out.println("Помилка читання статистики.");
+        }
+    }
+}
