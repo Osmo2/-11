@@ -1,0 +1,109 @@
+import java.util.Scanner;
+
+public class TicTacToe {
+
+    public static void main(String[] args) {
+        playGame();
+    }
+
+    // Основне меню гри
+    public static void printMenu() {
+        System.out.println("=== Хрестики-нулики ===");
+        System.out.println("Гра для двох гравців на полі 3x3");
+        System.out.println("Гравець 1 — X");
+        System.out.println("Гравець 2 — O");
+        System.out.println("Починаємо гру!\n");
+    }
+
+    // Виведення поля
+    public static void printBoard(char[][] board) {
+        for (int i = 0; i < 3; i++) {
+            System.out.println("-------------");
+            for (int j = 0; j < 3; j++) {
+                System.out.print("| " + board[i][j] + " ");
+            }
+            System.out.println("|");
+        }
+        System.out.println("-------------");
+    }
+
+    // Виконання ходу
+    public static boolean makeMove(char[][] board, int row, int col, char symbol) {
+        if (board[row][col] == ' ') {
+            board[row][col] = symbol;
+            return true;
+        } else {
+            System.out.println("Це поле вже зайняте!");
+            return false;
+        }
+    }
+
+    // Перевірка на перемогу
+    public static boolean checkWin(char[][] board, char symbol) {
+        for (int i = 0; i < 3; i++) {
+            // рядки або стовпці
+            if ((board[i][0] == symbol && board[i][1] == symbol && board[i][2] == symbol) ||
+                (board[0][i] == symbol && board[1][i] == symbol && board[2][i] == symbol)) {
+                return true;
+            }
+        }
+        // діагоналі
+        if ((board[0][0] == symbol && board[1][1] == symbol && board[2][2] == symbol) ||
+            (board[0][2] == symbol && board[1][1] == symbol && board[2][0] == symbol)) {
+            return true;
+        }
+        return false;
+    }
+
+    // Перевірка на нічию
+    public static boolean isBoardFull(char[][] board) {
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                if (board[i][j] == ' ')
+                    return false;
+        return true;
+    }
+
+    // Основний процес гри
+    public static void playGame() {
+        Scanner scanner = new Scanner(System.in);
+        char[][] board = new char[3][3];
+
+        // Ініціалізація пустого поля
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                board[i][j] = ' ';
+
+        printMenu();
+        printBoard(board);
+
+        char currentPlayer = 'X';
+
+        while (true) {
+            System.out.println("Хід гравця " + currentPlayer);
+            System.out.print("Введіть рядок (0-2): ");
+            int row = scanner.nextInt();
+            System.out.print("Введіть стовпець (0-2): ");
+            int col = scanner.nextInt();
+
+            if (makeMove(board, row, col, currentPlayer)) {
+                printBoard(board);
+
+                if (checkWin(board, currentPlayer)) {
+                    System.out.println("Гравець " + currentPlayer + " переміг!");
+                    break;
+                }
+
+                if (isBoardFull(board)) {
+                    System.out.println("Нічия!");
+                    break;
+                }
+
+                // Зміна гравця
+                currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+            }
+        }
+
+        scanner.close();
+    }
+}
