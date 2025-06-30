@@ -1,0 +1,81 @@
+import java.util.Scanner;
+
+public class StringFunctionsApp {
+
+    // 1. Введення рядка з валідацією
+    public static String inputValidString() {
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.print("Введіть рядок (мінімум 2 слова по 3+ символи): ");
+            String input = scanner.nextLine().trim();
+
+            // Розділення на слова
+            String[] words = input.split("\\s+");
+            int validWords = 0;
+
+            for (String word : words) {
+                if (word.length() >= 3) {
+                    validWords++;
+                }
+            }
+
+            if (validWords >= 2) {
+                return input;
+            } else {
+                System.out.println("❌ Помилка: введено недостатньо коректних слів. Спробуйте ще раз.\n");
+            }
+        }
+    }
+
+    // 2. Перевертання всієї строки
+    public static String reverseString(String s) {
+        StringBuilder reversed = new StringBuilder(s);
+        return reversed.reverse().toString();
+    }
+
+    // 3. Перевертання кожного слова окремо
+    public static String reverseWordsInString(String s) {
+        String[] words = s.split("\\s+");
+        StringBuilder result = new StringBuilder();
+
+        for (String word : words) {
+            StringBuilder reversedWord = new StringBuilder(word).reverse();
+            result.append(reversedWord).append(" ");
+        }
+
+        return result.toString().trim();
+    }
+
+    // 4. Меню вибору дії
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        String input = inputValidString();
+
+        System.out.println("\nОберіть дію:");
+        System.out.println("1 — Повністю перевернути рядок");
+        System.out.println("2 — Перевернути кожне слово в рядку");
+        System.out.print("Ваш вибір: ");
+        int choice = scanner.nextInt();
+        scanner.nextLine(); // зчитати залишок строки після числа
+
+        switch (choice) {
+            case 1:
+                System.out.println("Результат: " + reverseString(input));
+                break;
+            case 2:
+                System.out.println("Результат: " + reverseWordsInString(input));
+                break;
+            default:
+                System.out.println("❌ Невірний вибір.");
+        }
+
+        scanner.close();
+    }
+}
+ Приклад роботи: Введіть рядок (мінімум 2 слова по 3+ символи): це тест
+Оберіть дію:
+1 — Повністю перевернути рядок
+2 — Перевернути кожне слово в рядку
+Ваш вибір: 2
+Результат: ец тсет
